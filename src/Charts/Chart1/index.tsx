@@ -4,12 +4,15 @@ import { format } from "date-fns";
 import { Box, Stack, Typography } from "@mui/material";
 
 interface Chart1Props extends UseChart1 {
-
+  handleChangeZoom: ({ startIndex, endIndex }: {
+    startIndex?: number | undefined;
+    endIndex?: number | undefined;
+  }) => void;
 }
 
-const Chart1 = ({ ...vmOptions }: Chart1Props) => {
-  const { data } = vmOptions;
-  const { handleChangeZoom, multiFormat } = useChart1(vmOptions);
+const Chart1 = ({ handleChangeZoom, ...vmOptions }: Chart1Props) => {
+  const { data, startIndex, endIndex } = vmOptions;
+  const { lineChartData, canAnimate, xAxisTickFormatter } = useChart1(vmOptions);
 
   return (
     <Stack height="100%" flex={1} gap={1}>
@@ -21,28 +24,41 @@ const Chart1 = ({ ...vmOptions }: Chart1Props) => {
           <LineChart
             width={500}
             height={300}
-            data={data.data.values}
+            data={lineChartData}
             margin={{
               top: 5,
               right: 30,
               left: 20,
-              bottom: 5,
+              bottom: 20,
             }}
             syncId="myChart"
-            syncMethod="value"
+            // syncMethod="value"
           >
-            <XAxis dataKey="timeStamp" tickFormatter={multiFormat} />
+            <XAxis dataKey="timeStamp" tickFormatter={xAxisTickFormatter}>
+              <Label position="bottom">{`Time (${format(new Date(), 'z')})`}</Label>
+            </XAxis>
             <YAxis>
               <Label angle={-90} value={`${data.data.names.map((name) => `${name} (${data.units})`).join(' and ')}`} position='insideLeft' style={{textAnchor: 'middle'}} />
             </YAxis>
-            <Tooltip labelFormatter={(label, payload) => { return format(label * 1000, 'dd/MM/yyyy hh:mm a'); }} />
-            <Legend />
-            <Line type="monotone" dataKey="used" stroke="#8884d8" activeDot={{ r: 8 }} connectNulls dot={false} />
-            <Line type="monotone" dataKey="limit" stroke="#82ca9d" dot={false} />
-            <Brush onChange={handleChangeZoom} />
+            <Tooltip labelFormatter={(label, payload) => { return format(label * 1000, 'yyyy/MM/dd hh:mm a z'); }} />
+            <Legend verticalAlign="top" align="right" />
+            <Line type="monotone" dataKey="used" stroke="#8884d8" activeDot={{ r: 8 }} connectNulls dot={false} isAnimationActive={canAnimate} />
+            <Line type="monotone" dataKey="limit" stroke="#82ca9d" dot={false}  isAnimationActive={canAnimate} />
           </LineChart>
         </ResponsiveContainer>
       </Box>
+      <ResponsiveContainer width="100%" height={50}>
+          <LineChart width={500} height={300}
+          data={data.data.values}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}>
+            <Brush startIndex={startIndex} endIndex={endIndex} onChange={handleChangeZoom} />
+          </LineChart>
+        </ResponsiveContainer>
     </Stack>
   )
 };

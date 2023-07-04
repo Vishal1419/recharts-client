@@ -1,29 +1,25 @@
-import { useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Data } from "../types";
-import { formatDay, formatHour } from "../helpers";
+import usePrevious from "../../usePrevious";
+import { formatTime } from "../helpers";
 
 export interface UseChart2 {
   data: Data;
+  startIndex: number;
+  endIndex: number;
 }
 
-const useChart2 = ({ data }: UseChart2) => {
-  const timestamps = data.data.values.map((value) => value.timeStamp);
-  const minTimestamp = timestamps[0];
-  const maxTimestamp = timestamps[timestamps.length - 1];
+const useChart2 = ({ data, startIndex, endIndex }: UseChart2) => {
+  const lineChartData = useMemo(() => data.data.values.slice(startIndex, endIndex + 1), [data, startIndex, endIndex]);
+  const previousDataLength = usePrevious(data.data.values.length);
+  const canAnimate = data.data.values.length !== previousDataLength;
 
-  const multiFormat = (date: number) => {
-    const [minEpoch, maxEpoch] = [minTimestamp, maxTimestamp];
-    const epochDiff = (maxEpoch - minEpoch) / 60;
-    const epochDate = date * 1000;
+  const xAxisTickFormatter = useCallback((date: number) => {
+    const timestamps = lineChartData.map((value) => value.timeStamp);
+    return formatTime(date, timestamps);
+  }, [lineChartData]);
 
-    if (epochDiff > 60 * 24) {
-      return formatDay(epochDate);
-    }
-
-    return formatHour(epochDate);
-  }
-
-  return { multiFormat };
+  return { lineChartData, canAnimate, xAxisTickFormatter };
 };
 
 export default useChart2;

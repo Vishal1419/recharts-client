@@ -5,7 +5,7 @@ import Chart1 from "./Chart1";
 import Chart2 from "./Chart2";
 
 const Charts = () => {
-  const { fetchData, data } = useCharts();
+  const { fetchData, data, startIndex, endIndex, handleChangeZoom } = useCharts();
 
   if (!data) return <Stack height="100%" width="100%" justifyContent="center" alignItems="center"><CircularProgress /></Stack>;
 
@@ -13,8 +13,8 @@ const Charts = () => {
     <Stack style={{ height: 'calc(100% - 64px)' }} justifyContent="center" gap={2} p={4}>
       <Filters onChange={fetchData} />
       <Stack flex={1} direction="row" alignItems="center" gap={4}> 
-        <Chart1 data={data} />
-        <Chart2 data={data} />
+        <Chart1 data={data} startIndex={startIndex} endIndex={endIndex} handleChangeZoom={handleChangeZoom} />
+        <Chart2 data={data} startIndex={startIndex} endIndex={endIndex} />
       </Stack>
     </Stack>
   )

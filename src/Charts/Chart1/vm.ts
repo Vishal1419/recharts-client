@@ -1,44 +1,25 @@
-import { useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Data } from "../types";
-import { formatDay, formatHour, formatMinute } from "../helpers";
+import usePrevious from "../../usePrevious";
+import { formatTime } from "../helpers";
 
 export interface UseChart1 {
   data: Data;
+  startIndex: number;
+  endIndex: number;
 }
 
-const useChart1 = ({ data }: UseChart1) => {
-  const timestamps = data.data.values.map((value) => value.timeStamp);
-  const minTimestamp = timestamps[0];
-  const maxTimestamp = timestamps[timestamps.length - 1];
+const useChart1 = ({ data, startIndex, endIndex }: UseChart1) => {
+  const lineChartData = useMemo(() => data.data.values.slice(startIndex, endIndex + 1), [data, startIndex, endIndex]);
+  const previousDataLength = usePrevious(data.data.values.length);
+  const canAnimate = data.data.values.length !== previousDataLength;
 
-  const [visibleTimestamps, setVisibleTimestamps] = useState<[number, number]>([minTimestamp, maxTimestamp]);
+  const xAxisTickFormatter = useCallback((date: number) => {
+    const timestamps = lineChartData.map((value) => value.timeStamp);
+    return formatTime(date, timestamps);
+  }, [lineChartData]);
 
-  useEffect(() => {
-    setVisibleTimestamps([minTimestamp, maxTimestamp]);
-  }, [maxTimestamp, minTimestamp]);
-
-  const multiFormat = (date: number) => {
-    const [minEpoch, maxEpoch] = visibleTimestamps;
-    const epochDiff = (maxEpoch - minEpoch) / 60;
-    const epochDate = date * 1000;
-    console.log(epochDiff, maxEpoch, minEpoch)
-
-    if (epochDiff > 60 * 24) {
-      return formatDay(epochDate);
-    }
-
-    return formatHour(epochDate);
-  }
-
-  const handleChangeZoom = ({ startIndex, endIndex }: { startIndex?: number | undefined; endIndex?: number | undefined; }) => {
-    if (!startIndex || !endIndex) return;
-    console.log(startIndex, endIndex)
-    const minValue = data.data.values[startIndex].timeStamp;
-    const maxValue = data.data.values[endIndex].timeStamp;
-    setVisibleTimestamps([minValue, maxValue]);
-  };
-
-  return { handleChangeZoom, multiFormat };
+  return { lineChartData, canAnimate, xAxisTickFormatter };
 };
 
 export default useChart1;

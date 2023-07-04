@@ -7,11 +7,17 @@ export interface ServerData {
   }
 }
 
+export interface ChartData {
+  timeStamp: number;
+  used: number;
+  limit: number;
+}
+
 export interface Data {
   title: string;
   units: string;
   data: {
     names: [string, string];
-    values: { timeStamp: number; used: number; limit: number; }[];
+    values: ChartData[];
   }
 }

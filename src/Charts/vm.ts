@@ -3,6 +3,7 @@ import { Data, ServerData } from "./types";
 
 const useCharts = () => {
   const [data, setData] = useState<Data>();
+  const [zoomIndices, setZoomIndices] = useState<[number, number]>([0, 0]);
 
   const fetchData = useCallback(async (value: number) => {
     const response = await fetch(`https://busy-teal-magpie-tux.cyclic.app/?limit=${value}`);
@@ -24,6 +25,7 @@ const useCharts = () => {
       }
     }
 
+    setZoomIndices([0, transformedData.data.values.length - 1]);
     setData(transformedData);
   }, []);
 
@@ -31,9 +33,18 @@ const useCharts = () => {
     fetchData(60);
   }, [fetchData]);
 
+  const handleChangeZoom = useCallback(({ startIndex, endIndex }: { startIndex?: number | undefined; endIndex?: number | undefined; }) => {
+    if (startIndex === undefined || endIndex === undefined) return;
+    if (!data) return;
+    setZoomIndices([startIndex, endIndex]);
+  }, [data]);
+
   return {
     fetchData,
     data,
+    handleChangeZoom,
+    startIndex: zoomIndices[0],
+    endIndex: zoomIndices[1],
   }
 };
 
